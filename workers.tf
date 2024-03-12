@@ -1,5 +1,17 @@
+locals {
+  extracted_worker_list = flatten([
+    for v in var.proxmox_node_map: [
+      for target, t in v: [
+        for i in range(0, t.worker_count): {
+          target = target
+        }
+      ]
+    ]
+  ])
+}
+
 resource "random_string" "worker_suffix" {
-  count   = var.worker_count
+  count   = length(local.extracted_worker_list)
   length  = 4
   special = false
   numeric = false
@@ -13,12 +25,13 @@ resource "random_string" "worker_suffix" {
 }
 
 resource "macaddress" "worker" {
-  count = var.worker_count
+  count =  length(local.extracted_worker_list)
 }
 
 locals {
   worker_list = flatten([
     for index, suffix in random_string.worker_suffix : {
+      target   = local.extracted_worker_list[index].target
       hostname = "worker-${suffix.id}"
       mac      = macaddress.worker[index].address
       ip       = cidrhost(var.worker_subnet_cidr, index)
@@ -27,7 +40,7 @@ locals {
 }
 
 resource "matchbox_profile" "worker" {
-  count  = var.worker_count
+  count  = length(local.worker_list)
   name   = local.worker_list[count.index].hostname
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
@@ -41,7 +54,7 @@ resource "matchbox_profile" "worker" {
 }
 
 resource "matchbox_group" "worker" {
-  count = var.worker_count
+  count = length(local.worker_list)
   name  = local.worker_list[count.index].hostname
 
   profile = matchbox_profile.worker[count.index].name
@@ -59,7 +72,7 @@ resource "matchbox_group" "worker" {
 # separate ignition files per worker. We'd need a way to have different
 # zones here, so we can keep this configuratio as a placeholder
 data "ignition_config" "worker" {
-  count = var.worker_count
+  count =  length(local.worker_list)
 
   systemd     = var.worker_ignition_systemd
   files       = var.worker_ignition_files
@@ -67,9 +80,9 @@ data "ignition_config" "worker" {
 }
 
 resource "proxmox_vm_qemu" "worker" {
-  count       = var.worker_count
+  count       = length(local.worker_list)
   name        = local.worker_list[count.index].hostname
-  target_node = "proxmox-0"
+  target_node = local.worker_list[count.index].target
   desc        = "Worker node"
   pxe         = true
   boot        = "order=net0;scsi0"

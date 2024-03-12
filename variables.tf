@@ -38,9 +38,35 @@ variable "vlan" {
   description = "The network vlan ID"
 }
 
-variable "worker_count" {
-  description = "Number of vm's to create for worker nodes"
+# proxmox_node_map is the map of the nodes to be deployed accross targets.
+# An exampe configuration would be:
+# variable "proxmox_node_map" = [
+#   {
+#     proxmox-0 = {
+#       master_count = 1
+#       worker_count = 3
+#     }
+#   },
+#   {
+#     proxmox-1 = {
+#       worker_count = 9
+#     }
+#   }
+# ]
+variable "proxmox_node_map" {
+  description = "A list of ProxMox target nodes and the number of noder per type (cfssl, etcd, master, worker) to deploy on each"
+
+  type = list(map(object({
+    cfssl_count  = optional(number, 0)
+    etcd_count   = optional(number, 0)
+    master_count = optional(number, 0)
+    worker_count = optional(number, 0)
+  })))
+
 }
+//variable "worker_count" {
+//  description = "Number of vm's to create for worker nodes"
+//}
 
 variable "worker_subnet_cidr" {
   description = "Range for assigning worker IP addresses"
