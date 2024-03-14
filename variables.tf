@@ -30,20 +30,16 @@ variable "flatcar_initrd_addresses" {
   ]
 }
 
-variable "dhcp_server_address_list" {
-  description = "IP addresses to update dhcp config via ssh"
-}
-
 variable "vlan" {
   description = "The network vlan ID"
 }
 
-variable "worker_count" {
-  description = "Number of vm's to create for worker nodes"
-}
-
-variable "worker_subnet_cidr" {
-  description = "Range for assigning worker IP addresses"
+variable "worker_instances" {
+  type = list(object({
+    ip_address  = string
+    mac_address = string
+    pve_host    = string
+  }))
 }
 
 variable "worker_ignition_systemd" {
