@@ -43,14 +43,17 @@ data "ignition_file" "worker_kubelet_dropin" {
 data "ignition_config" "worker" {
   count = length(var.worker_instance_list)
 
-  systemd = var.worker_ignition_systemd
+  directories = var.worker_ignition_directories
+  filesystems = [
+    data.ignition_filesystem.root_scsi0.rendered,
+  ]
   files = concat(
     [
       data.ignition_file.worker_kubelet_dropin[count.index].rendered,
     ],
     var.worker_ignition_files
   )
-  directories = var.worker_ignition_directories
+  systemd = var.worker_ignition_systemd
 }
 
 resource "proxmox_vm_qemu" "worker" {
