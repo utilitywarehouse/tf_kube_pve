@@ -62,7 +62,7 @@ resource "proxmox_vm_qemu" "worker" {
   target_node = var.worker_instance_list[count.index].pve_host
   desc        = "Worker node"
   pxe         = true
-  boot        = "order=net0;scsi0"
+  boot        = "order=net0"
   cores       = 8
   hotplug     = "network,disk,usb"
   memory      = 32768
@@ -87,6 +87,7 @@ resource "proxmox_vm_qemu" "worker" {
     bridge  = "vmbr0"
     macaddr = var.worker_instance_list[count.index].mac_address
     model   = "virtio"
+    mtu     = 9000
     tag     = var.vlan
   }
 }
