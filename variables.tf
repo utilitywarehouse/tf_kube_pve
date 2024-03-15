@@ -61,5 +61,5 @@ locals {
   # Worker histnames are also calculated the same way under our Ansible
   # configuration for DHCP:
   # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
-  worker_hostname = [ for worker in var.worker_instance_list: "worker-${substr(sha256(worker.mac_address), 0, 6)}" ]
+  worker_hostname_list = [ for worker in var.worker_instance_list: "worker-${substr(sha256(worker.mac_address), 0, 6)}" ]
 }

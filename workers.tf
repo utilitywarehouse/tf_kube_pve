@@ -1,6 +1,6 @@
 resource "matchbox_profile" "worker" {
   count  = length(var.worker_instance_list)
-  name   = local.worker_hostname[count.index]
+  name   = local.worker_hostname_list[count.index]
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
@@ -14,7 +14,7 @@ resource "matchbox_profile" "worker" {
 
 resource "matchbox_group" "worker" {
   count = length(var.worker_instance_list)
-  name  = local.worker_hostname[count.index]
+  name  = local.worker_hostname_list[count.index]
 
   profile = matchbox_profile.worker[count.index].name
 
@@ -40,7 +40,7 @@ data "ignition_config" "worker" {
 
 resource "proxmox_vm_qemu" "worker" {
   count       = length(var.worker_instance_list)
-  name        = local.worker_hostname[count.index]
+  name        = local.worker_hostname_list[count.index]
   target_node = var.worker_instance_list[count.index].pve_host
   desc        = "Worker node"
   pxe         = true
