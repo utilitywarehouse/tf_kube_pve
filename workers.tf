@@ -39,9 +39,7 @@ data "ignition_file" "worker_kubelet_dropin" {
     )
   }
 }
-# ToDo: There is no specific per worker config here to justify creating
-# separate ignition files per worker. We'd need a way to have different
-# zones here, so we can keep this configuratio as a placeholder
+
 data "ignition_config" "worker" {
   count = length(var.worker_instance_list)
 
