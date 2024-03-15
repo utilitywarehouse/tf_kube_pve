@@ -1,5 +1,5 @@
 resource "matchbox_profile" "worker" {
-  count  = length(var.worker_instances)
+  count  = length(var.worker_instance_list)
   name   = "worker-pve-${count.index}"
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
@@ -13,13 +13,13 @@ resource "matchbox_profile" "worker" {
 }
 
 resource "matchbox_group" "worker" {
-  count = length(var.worker_instances)
+  count = length(var.worker_instance_list)
   name  = "worker-pve-${count.index}"
 
   profile = matchbox_profile.worker[count.index].name
 
   selector = {
-    mac = var.worker_instances[count.index].mac_address
+    mac = var.worker_instance_list[count.index].mac_address
   }
 
   metadata = {
@@ -31,7 +31,7 @@ resource "matchbox_group" "worker" {
 # separate ignition files per worker. We'd need a way to have different
 # zones here, so we can keep this configuratio as a placeholder
 data "ignition_config" "worker" {
-  count = length(var.worker_instances)
+  count = length(var.worker_instance_list)
 
   systemd     = var.worker_ignition_systemd
   files       = var.worker_ignition_files
@@ -39,9 +39,9 @@ data "ignition_config" "worker" {
 }
 
 resource "proxmox_vm_qemu" "worker" {
-  count       = length(var.worker_instances)
-  name        = "worker-pve-${count.index}"
-  target_node = var.worker_instances[count.index].pve_host
+  count       = length(var.worker_instance_list)
+  name        = local.worker_hostname[count.index]
+  target_node = var.worker_instance_list[count.index].pve_host
   desc        = "Worker node"
   pxe         = true
   boot        = "order=net0;scsi0"
@@ -67,7 +67,7 @@ resource "proxmox_vm_qemu" "worker" {
 
   network {
     bridge  = "vmbr0"
-    macaddr = var.worker_instances[count.index].mac_address
+    macaddr = var.worker_instance_list[count.index].mac_address
     model   = "virtio"
     tag     = var.vlan
   }

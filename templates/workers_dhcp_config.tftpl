@@ -1,8 +1,0 @@
-%{ for w in worker_list ~}
-host ${w.hostname} {
-  option host-name "${w.hostname}.${dns_domain}";
-  hardware ethernet ${w.mac};
-  fixed-address ${w.ip};
-  filename "${matchbox_boot_location}";
-}
-%{ endfor ~}

@@ -34,7 +34,7 @@ variable "vlan" {
   description = "The network vlan ID"
 }
 
-variable "worker_instances" {
+variable "worker_instance_list" {
   type = list(object({
     ip_address  = string
     mac_address = string
@@ -55,4 +55,8 @@ variable "worker_ignition_files" {
 variable "worker_ignition_directories" {
   type        = list(string)
   description = "The ignition directories to provide to worker nodes."
+}
+
+locals {
+  worker_hostname = [ for worker in var.worker_instance_list: "worker-${substr(sha256(worker.mac_address), 0, 6)}" ]
 }
