@@ -1,6 +1,6 @@
 resource "matchbox_profile" "worker" {
   count  = length(var.worker_instance_list)
-  name   = "worker-pve-${count.index}"
+  name   = local.worker_hostname[count.index]
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
@@ -14,7 +14,7 @@ resource "matchbox_profile" "worker" {
 
 resource "matchbox_group" "worker" {
   count = length(var.worker_instance_list)
-  name  = "worker-pve-${count.index}"
+  name  = local.worker_hostname[count.index]
 
   profile = matchbox_profile.worker[count.index].name
 
