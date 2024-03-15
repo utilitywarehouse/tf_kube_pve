@@ -30,20 +30,16 @@ variable "flatcar_initrd_addresses" {
   ]
 }
 
-variable "dhcp_server_address_list" {
-  description = "IP addresses to update dhcp config via ssh"
-}
-
 variable "vlan" {
   description = "The network vlan ID"
 }
 
-variable "worker_count" {
-  description = "Number of vm's to create for worker nodes"
-}
-
-variable "worker_subnet_cidr" {
-  description = "Range for assigning worker IP addresses"
+variable "worker_instance_list" {
+  type = list(object({
+    ip_address  = string
+    mac_address = string
+    pve_host    = string
+  }))
 }
 
 variable "worker_ignition_systemd" {
@@ -59,4 +55,11 @@ variable "worker_ignition_files" {
 variable "worker_ignition_directories" {
   type        = list(string)
   description = "The ignition directories to provide to worker nodes."
+}
+
+locals {
+  # Worker hostnames are also calculated the same way under our Ansible
+  # configuration for DHCP:
+  # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
+  worker_hostname_list = [ for worker in var.worker_instance_list: "worker-${substr(sha256(worker.mac_address), 0, 6)}" ]
 }

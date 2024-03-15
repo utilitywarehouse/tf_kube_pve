@@ -1,34 +1,6 @@
-resource "random_string" "worker_suffix" {
-  count   = var.worker_count
-  length  = 4
-  special = false
-  numeric = false
-  upper   = false
-  lower   = true
-
-  # Keep string unique
-  keepers = {
-    unique_id = "${count.index}"
-  }
-}
-
-resource "macaddress" "worker" {
-  count = var.worker_count
-}
-
-locals {
-  worker_list = flatten([
-    for index, suffix in random_string.worker_suffix : {
-      hostname = "worker-${suffix.id}"
-      mac      = macaddress.worker[index].address
-      ip       = cidrhost(var.worker_subnet_cidr, index)
-    }
-  ])
-}
-
 resource "matchbox_profile" "worker" {
-  count  = var.worker_count
-  name   = local.worker_list[count.index].hostname
+  count  = length(var.worker_instance_list)
+  name   = local.worker_hostname_list[count.index]
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
@@ -41,13 +13,13 @@ resource "matchbox_profile" "worker" {
 }
 
 resource "matchbox_group" "worker" {
-  count = var.worker_count
-  name  = local.worker_list[count.index].hostname
+  count = length(var.worker_instance_list)
+  name  = local.worker_hostname_list[count.index]
 
   profile = matchbox_profile.worker[count.index].name
 
   selector = {
-    mac = local.worker_list[count.index].mac
+    mac = var.worker_instance_list[count.index].mac_address
   }
 
   metadata = {
@@ -59,7 +31,7 @@ resource "matchbox_group" "worker" {
 # separate ignition files per worker. We'd need a way to have different
 # zones here, so we can keep this configuratio as a placeholder
 data "ignition_config" "worker" {
-  count = var.worker_count
+  count = length(var.worker_instance_list)
 
   systemd     = var.worker_ignition_systemd
   files       = var.worker_ignition_files
@@ -67,9 +39,9 @@ data "ignition_config" "worker" {
 }
 
 resource "proxmox_vm_qemu" "worker" {
-  count       = var.worker_count
-  name        = local.worker_list[count.index].hostname
-  target_node = "proxmox-0"
+  count       = length(var.worker_instance_list)
+  name        = local.worker_hostname_list[count.index]
+  target_node = var.worker_instance_list[count.index].pve_host
   desc        = "Worker node"
   pxe         = true
   boot        = "order=net0;scsi0"
@@ -95,13 +67,8 @@ resource "proxmox_vm_qemu" "worker" {
 
   network {
     bridge  = "vmbr0"
-    macaddr = macaddress.worker[count.index].address
+    macaddr = var.worker_instance_list[count.index].mac_address
     model   = "virtio"
     tag     = var.vlan
   }
-
-  depends_on = [
-    null_resource.worker_restart_dhcpd,
-  ]
-
 }
