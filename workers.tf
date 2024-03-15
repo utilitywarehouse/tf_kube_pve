@@ -27,14 +27,31 @@ resource "matchbox_group" "worker" {
   }
 }
 
+data "ignition_file" "worker_kubelet_dropin" {
+  count = length(var.worker_instance_list)
+  path  = "/etc/systemd/system/kubelet.service.d/10-custom-options.conf"
+  mode  = 420
+  content {
+    content = templatefile("${path.module}/resources/kubelet-dropin.conf",
+      {
+        labels = "role=worker,topology.kubernetes.io/zone=${var.worker_instance_list[count.index].pve_host}"
+      }
+    )
+  }
+}
 # ToDo: There is no specific per worker config here to justify creating
 # separate ignition files per worker. We'd need a way to have different
 # zones here, so we can keep this configuratio as a placeholder
 data "ignition_config" "worker" {
   count = length(var.worker_instance_list)
 
-  systemd     = var.worker_ignition_systemd
-  files       = var.worker_ignition_files
+  systemd = var.worker_ignition_systemd
+  files = concat(
+    [
+      data.ignition_file.worker_kubelet_dropin[count.index].rendered,
+    ],
+    var.worker_ignition_files
+  )
   directories = var.worker_ignition_directories
 }
 
