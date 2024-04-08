@@ -7,6 +7,7 @@ resource "matchbox_profile" "worker" {
     "initrd=flatcar_production_pxe_image.cpio.gz",
     "ignition.config.url=${var.matchbox_http_endpoint}/ignition?uuid=$${uuid}&mac=$${mac:hexhyp}",
     "flatcar.first_boot=yes",
+    "root=LABEL=ROOT",
   ]
 
   raw_ignition = data.ignition_config.worker[count.index].rendered
@@ -44,6 +45,9 @@ data "ignition_config" "worker" {
   count = length(var.worker_instance_list)
 
   directories = var.worker_ignition_directories
+  disks = [
+    data.ignition_disk.devsda.rendered,
+  ]
   filesystems = [
     data.ignition_filesystem.root_scsi0.rendered,
   ]
