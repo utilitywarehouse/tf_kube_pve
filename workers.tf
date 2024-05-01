@@ -30,7 +30,7 @@ resource "matchbox_group" "worker" {
 
 data "ignition_file" "worker_kubelet_dropin" {
   count = length(var.worker_instance_list)
-  path  = "/etc/systemd/system/kubelet.service.d/10-custom-options.conf"
+  path  = "/etc/systemd/system/kubelet.service.d/local.conf"
   mode  = 420
   content {
     content = templatefile("${path.module}/resources/kubelet-dropin.conf",
