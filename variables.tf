@@ -34,6 +34,44 @@ variable "vlan" {
   description = "The network vlan ID"
 }
 
+variable "etcd_instance_list" {
+  type = list(object({
+    ip_address  = string
+    mac_address = string
+    pve_host    = string
+  }))
+}
+
+variable "etcd_instance_core_count" {
+  description = "Number of VM cores to allocate per etcd instance"
+  default     = 2
+}
+
+variable "etcd_instance_memory" {
+  description = "Memory size to allocate for etcd instance VMs in MB"
+  default     = 8192
+}
+
+variable "etcd_volume_size" {
+  description = "Size of the persistent disk to back etcd store in GB"
+  default     = 5
+}
+
+variable "etcd_ignition_systemd" {
+  type        = list(list(string))
+  description = "The systemd files to provide to the etcd members."
+}
+
+variable "etcd_ignition_files" {
+  type        = list(list(string))
+  description = "The ignition files to provide to the etcd members."
+}
+
+variable "etcd_ignition_directories" {
+  type        = list(list(string))
+  description = "The ignition directories to provide to the etcd members."
+}
+
 variable "worker_instance_list" {
   type = list(object({
     ip_address  = string
@@ -41,6 +79,17 @@ variable "worker_instance_list" {
     pve_host    = string
   }))
 }
+
+variable "worker_instance_core_count" {
+  description = "Number of VM cores to allocate per worker node"
+  default     = 8
+}
+
+variable "worker_instance_memory" {
+  description = "Memory size to allocate for worker VMs in MB"
+  default     = 32768
+}
+
 
 variable "worker_ignition_systemd" {
   type        = list(string)
@@ -58,8 +107,11 @@ variable "worker_ignition_directories" {
 }
 
 locals {
+  # ETCD hostnames are also calculated the same way under our Ansible
+  # configuration for DHCP:
+  etcd_hostname_list = [for etcd in var.etcd_instance_list : "etcd-${substr(sha256(etcd.mac_address), 0, 6)}"]
   # Worker hostnames are also calculated the same way under our Ansible
   # configuration for DHCP:
   # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
-  worker_hostname_list = [ for worker in var.worker_instance_list: "worker-${substr(sha256(worker.mac_address), 0, 6)}" ]
+  worker_hostname_list = [for worker in var.worker_instance_list : "worker-${substr(sha256(worker.mac_address), 0, 6)}"]
 }
