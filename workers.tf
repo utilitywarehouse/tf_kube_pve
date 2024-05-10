@@ -67,9 +67,9 @@ resource "proxmox_vm_qemu" "worker" {
   desc        = "Worker node"
   pxe         = true
   boot        = "order=net0"
-  cores       = 8
+  cores       = var.worker_instance_core_count
   hotplug     = "network,disk,usb"
-  memory      = 32768
+  memory      = var.worker_instance_memory
   vm_state    = "running"
   os_type     = "6.x - 2.6 Kernel"
   onboot      = true
