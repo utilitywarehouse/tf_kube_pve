@@ -28,35 +28,25 @@ resource "matchbox_group" "etcd" {
   }
 }
 
-data "ignition_filesystem" "etcd_scsi1" {
-  device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1"
-  format = "ext4"
-  label  = "ETCD"
-}
-
-data "ignition_disk" "devsdb" {
-  device = "/dev/sdb"
-
-  partition {
-    label  = "ETCD"
-    number = 1
-  }
-}
-
 data "ignition_config" "etcd" {
   count = length(var.etcd_instance_list)
 
   directories = var.etcd_ignition_directories[count.index]
   disks = [
     data.ignition_disk.devsda.rendered,
-    data.ignition_disk.devsdb.rendered,
   ]
   filesystems = [
     data.ignition_filesystem.root_scsi0.rendered,
-    data.ignition_filesystem.etcd_scsi1.rendered,
   ]
   files   = var.etcd_ignition_files[count.index]
   systemd = var.etcd_ignition_systemd[count.index]
+}
+
+# disk ID based on the VM config below. Format and mounting will be done via
+# the disk-mounter.service we ship with ignition. The variable is used to
+# export the ID so that we can make it available to ignition module.
+variable "etcd_data_volume_id" {
+  default = "disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1"
 }
 
 resource "proxmox_vm_qemu" "etcd" {
