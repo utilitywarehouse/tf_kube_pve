@@ -72,6 +72,14 @@ variable "etcd_ignition_directories" {
   description = "The ignition directories to provide to the etcd members."
 }
 
+variable "etcd_subnet_cidr" {
+  description = "Address range for etcd members for iptables rules"
+}
+
+variable "masters_subnet_cidr" {
+  description = "Address range for master nodes for iptables rules"
+}
+
 variable "worker_instance_list" {
   type = list(object({
     ip_address  = string
@@ -104,6 +112,18 @@ variable "worker_ignition_files" {
 variable "worker_ignition_directories" {
   type        = list(string)
   description = "The ignition directories to provide to worker nodes."
+}
+
+variable "ssh_address_range" {
+  description = "Address range from which to allow ssh"
+}
+
+variable "nodes_subnet_cidr" {
+  description = "Address range for kube slave nodes"
+}
+
+variable "cluster_subnet" {
+  description = "Cluster ip subnet"
 }
 
 locals {
