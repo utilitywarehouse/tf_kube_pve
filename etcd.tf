@@ -106,7 +106,7 @@ resource "proxmox_vm_qemu" "etcd" {
   count       = length(var.etcd_instance_list)
   name        = local.etcd_hostname_list[count.index]
   target_node = var.etcd_instance_list[count.index].pve_host
-  desc        = "Worker node"
+  desc        = "ETCD node"
   pxe         = true
   boot        = "order=net0"
   cores       = var.etcd_instance_core_count

@@ -29,6 +29,4 @@ ExecStart=/usr/sbin/iptables-restore /var/lib/iptables/rules-save
 [Install]
 WantedBy=multi-user.target
 EOS
-
 }
-
