@@ -34,6 +34,39 @@ variable "vlan" {
   description = "The network vlan ID"
 }
 
+variable "cfssl_instance" {
+  type = object({
+    ip_address  = string
+    mac_address = string
+    pve_host    = string
+  })
+}
+
+variable "cfssl_instance_core_count" {
+  description = "Number of VM cores to allocate for cfssl instance"
+  default     = 2
+}
+
+variable "cfssl_instance_memory" {
+  description = "Memory size to allocate for cfssl instance VM in MB"
+  default     = 8192
+}
+
+variable "cfssl_ignition_systemd" {
+  type        = list(string)
+  description = "The systemd files to provide to the cfssl."
+}
+
+variable "cfssl_ignition_files" {
+  type        = list(string)
+  description = "The ignition files to provide to the cfssl."
+}
+
+variable "cfssl_ignition_directories" {
+  type        = list(string)
+  description = "The ignition directories to provide to the cfssl."
+}
+
 variable "etcd_instance_list" {
   type = list(object({
     ip_address  = string
