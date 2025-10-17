@@ -1,5 +1,5 @@
 resource "matchbox_profile" "cfssl" {
-  name   = "cfssl"
+  name   = "cfssl-pve"
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
@@ -13,7 +13,7 @@ resource "matchbox_profile" "cfssl" {
 }
 
 resource "matchbox_group" "cfssl" {
-  name    = "cfssl"
+  name    = "cfssl-pve"
   profile = matchbox_profile.cfssl.name
 
   selector = {
