@@ -74,9 +74,6 @@ data "ignition_config" "etcd" {
   count = length(var.etcd_instance_list)
 
   directories = var.etcd_ignition_directories[count.index]
-  disks = [
-    data.ignition_disk.devsda.rendered,
-  ]
   filesystems = [
     data.ignition_filesystem.root_scsi0.rendered,
   ]
