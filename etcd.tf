@@ -1,6 +1,6 @@
 resource "matchbox_profile" "etcd" {
   count  = length(var.etcd_instance_list)
-  name   = local.etcd_hostname_list[count.index]
+  name   = "etcd-pve-${count.index}"
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
@@ -15,7 +15,7 @@ resource "matchbox_profile" "etcd" {
 
 resource "matchbox_group" "etcd" {
   count = length(var.etcd_instance_list)
-  name  = local.etcd_hostname_list[count.index]
+  name  = "etcd-pve-${count.index}"
 
   profile = matchbox_profile.etcd[count.index].name
 
@@ -104,7 +104,7 @@ variable "etcd_data_volume_id" {
 
 resource "proxmox_vm_qemu" "etcd" {
   count       = length(var.etcd_instance_list)
-  name        = local.etcd_hostname_list[count.index]
+  name        = "etcd-${count.index}"
   target_node = var.etcd_instance_list[count.index].pve_host
   desc        = "ETCD node"
   pxe         = true

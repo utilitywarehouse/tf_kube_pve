@@ -160,9 +160,6 @@ variable "cluster_subnet" {
 }
 
 locals {
-  # ETCD hostnames are also calculated the same way under our Ansible
-  # configuration for DHCP:
-  etcd_hostname_list = [for etcd in var.etcd_instance_list : "etcd-${substr(sha256(etcd.mac_address), 0, 6)}"]
   # Worker hostnames are also calculated the same way under our Ansible
   # configuration for DHCP:
   # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
