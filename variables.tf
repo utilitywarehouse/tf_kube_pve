@@ -113,6 +113,40 @@ variable "masters_subnet_cidr" {
   description = "Address range for master nodes for iptables rules"
 }
 
+variable "master_instance_list" {
+  type = list(object({
+    ip_address  = string
+    mac_address = string
+    pve_host    = string
+  }))
+}
+
+variable "master_instance_core_count" {
+  description = "Number of VM cores to allocate per master node"
+  default     = 8
+}
+
+variable "master_instance_memory" {
+  description = "Memory size to allocate for master VMs in MB"
+  default     = 32768
+}
+
+
+variable "master_ignition_systemd" {
+  type        = list(string)
+  description = "The systemd files to provide to master nodes."
+}
+
+variable "master_ignition_files" {
+  type        = list(string)
+  description = "The ignition files to provide to master nodes."
+}
+
+variable "master_ignition_directories" {
+  type        = list(string)
+  description = "The ignition directories to provide to master nodes."
+}
+
 variable "worker_instance_list" {
   type = list(object({
     ip_address  = string
@@ -160,6 +194,10 @@ variable "cluster_subnet" {
 }
 
 locals {
+  # Mater hostnames are also calculated the same way under our Ansible
+  # configuration for DHCP:
+  # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
+  master_hostname_list = [for master in var.master_instance_list : "master-${substr(sha256(master.mac_address), 0, 6)}"]
   # Worker hostnames are also calculated the same way under our Ansible
   # configuration for DHCP:
   # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl

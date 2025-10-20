@@ -15,6 +15,15 @@ resource "cloudflare_record" "etcd" {
   ttl     = 120
 }
 
+resource "cloudflare_record" "master" {
+  count   = length(var.master_instance_list)
+  zone_id = var.dns_zone_id
+  name    = local.master_hostname_list[count.index]
+  content = var.master_instance_list[count.index].ip_address
+  type    = "A"
+  ttl     = 120
+}
+
 resource "cloudflare_record" "worker" {
   count   = length(var.worker_instance_list)
   zone_id = var.dns_zone_id
