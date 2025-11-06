@@ -122,6 +122,5 @@ resource "proxmox_vm_qemu" "cfssl" {
     macaddr = var.cfssl_instance.mac_address
     model   = "virtio"
     mtu     = 9000
-    tag     = var.vlan
   }
 }

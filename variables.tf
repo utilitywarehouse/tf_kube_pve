@@ -30,10 +30,6 @@ variable "flatcar_initrd_addresses" {
   ]
 }
 
-variable "vlan" {
-  description = "The network vlan ID"
-}
-
 variable "cfssl_instance" {
   type = object({
     ip_address  = string
