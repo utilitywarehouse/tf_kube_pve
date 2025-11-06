@@ -89,6 +89,5 @@ resource "proxmox_vm_qemu" "master" {
     macaddr = var.master_instance_list[count.index].mac_address
     model   = "virtio"
     mtu     = 9000
-    tag     = var.vlan
   }
 }

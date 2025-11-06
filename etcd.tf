@@ -137,6 +137,5 @@ resource "proxmox_vm_qemu" "etcd" {
     macaddr = var.etcd_instance_list[count.index].mac_address
     model   = "virtio"
     mtu     = 9000
-    tag     = var.vlan
   }
 }
