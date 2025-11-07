@@ -5,7 +5,7 @@ terraform {
     }
     proxmox = {
       source  = "telmate/proxmox"
-      version = "3.0.1-rc1"
+      version = "3.0.2-rc05"
     }
     macaddress = {
       source = "ivoronin/macaddress"
