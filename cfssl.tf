@@ -97,14 +97,16 @@ resource "proxmox_vm_qemu" "cfssl" {
   desc        = "CFSSL node"
   pxe         = true
   boot        = "order=net0"
-  cores       = var.cfssl_instance_core_count
-  hotplug     = "network,disk,usb"
-  memory      = var.cfssl_instance_memory
-  vm_state    = "running"
-  os_type     = "6.x - 2.6 Kernel"
-  onboot      = true
-  scsihw      = "virtio-scsi-pci"
-  qemu_os     = "other"
+  cpu {
+    cores = var.cfssl_instance_core_count
+  }
+  hotplug  = "network,disk,usb"
+  memory   = var.cfssl_instance_memory
+  vm_state = "running"
+  os_type  = "6.x - 2.6 Kernel"
+  onboot   = true
+  scsihw   = "virtio-scsi-pci"
+  qemu_os  = "other"
 
   disks {
     scsi {
@@ -118,6 +120,7 @@ resource "proxmox_vm_qemu" "cfssl" {
   }
 
   network {
+    id      = 0
     bridge  = "vmbr0"
     macaddr = var.cfssl_instance.mac_address
     model   = "virtio"
