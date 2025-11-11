@@ -67,14 +67,16 @@ resource "proxmox_vm_qemu" "worker" {
   desc        = "Worker node"
   pxe         = true
   boot        = "order=net0"
-  cores       = var.worker_instance_core_count
-  hotplug     = "network,disk,usb"
-  memory      = var.worker_instance_memory
-  vm_state    = "running"
-  os_type     = "6.x - 2.6 Kernel"
-  onboot      = true
-  scsihw      = "virtio-scsi-pci"
-  qemu_os     = "other"
+  cpu {
+    cores = var.worker_instance_core_count
+  }
+  hotplug  = "network,disk,usb"
+  memory   = var.worker_instance_memory
+  vm_state = "running"
+  os_type  = "6.x - 2.6 Kernel"
+  onboot   = true
+  scsihw   = "virtio-scsi-pci"
+  qemu_os  = "other"
 
   disks {
     scsi {
@@ -88,6 +90,7 @@ resource "proxmox_vm_qemu" "worker" {
   }
 
   network {
+    id      = 0
     bridge  = "vmbr0"
     macaddr = var.worker_instance_list[count.index].mac_address
     model   = "virtio"
