@@ -1,4 +1,5 @@
 resource "matchbox_profile" "cfssl" {
+  count  = var.cfssl_instance == null ? 0 : 1
   name   = "cfssl-pve"
   kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
@@ -9,12 +10,13 @@ resource "matchbox_profile" "cfssl" {
     "root=LABEL=ROOT",
   ]
 
-  raw_ignition = data.ignition_config.cfssl.rendered
+  raw_ignition = data.ignition_config.cfssl[0].rendered
 }
 
 resource "matchbox_group" "cfssl" {
+  count   = var.cfssl_instance == null ? 0 : 1
   name    = "cfssl-pve"
-  profile = matchbox_profile.cfssl.name
+  profile = matchbox_profile.cfssl[0].name
 
   selector = {
     mac = var.cfssl_instance.mac_address
@@ -27,8 +29,9 @@ resource "matchbox_group" "cfssl" {
 
 // Firewall rules via iptables
 data "ignition_file" "cfssl_iptables_rules" {
-  path = "/var/lib/iptables/rules-save"
-  mode = 420
+  count = var.cfssl_instance == null ? 0 : 1
+  path  = "/var/lib/iptables/rules-save"
+  mode  = 420
 
   content {
     content = <<EOS
@@ -69,6 +72,7 @@ EOS
 
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
+  count = var.cfssl_instance == null ? 0 : 1
   disks = [
     data.ignition_disk.devsda.rendered,
   ]
@@ -83,7 +87,7 @@ data "ignition_config" "cfssl" {
 
   files = concat(
     [
-      data.ignition_file.cfssl_iptables_rules.rendered,
+      data.ignition_file.cfssl_iptables_rules[0].rendered,
     ],
     var.cfssl_ignition_files,
   )
@@ -92,6 +96,7 @@ data "ignition_config" "cfssl" {
 }
 
 resource "proxmox_vm_qemu" "cfssl" {
+  count       = var.cfssl_instance == null ? 0 : 1
   name        = "cfssl"
   target_node = var.cfssl_instance.pve_host
   desc        = "CFSSL node"

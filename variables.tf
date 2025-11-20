@@ -36,6 +36,7 @@ variable "cfssl_instance" {
     mac_address = string
     pve_host    = string
   })
+  default = null
 }
 
 variable "cfssl_instance_core_count" {
@@ -69,6 +70,7 @@ variable "etcd_instance_list" {
     mac_address = string
     pve_host    = string
   }))
+  default = []
 }
 
 variable "etcd_instance_core_count" {
@@ -115,6 +117,7 @@ variable "master_instance_list" {
     mac_address = string
     pve_host    = string
   }))
+  default = []
 }
 
 variable "master_instance_core_count" {
@@ -149,6 +152,7 @@ variable "worker_instance_list" {
     mac_address = string
     pve_host    = string
   }))
+  default = []
 }
 
 variable "worker_instance_core_count" {
