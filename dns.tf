@@ -1,4 +1,5 @@
 resource "cloudflare_record" "cfssl" {
+  count   = var.cfssl_instance == null ? 0 : 1
   zone_id = var.dns_zone_id
   name    = "cfssl"
   content = var.cfssl_instance.ip_address
