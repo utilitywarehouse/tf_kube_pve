@@ -162,7 +162,7 @@ variable "worker_instance_core_count" {
 
 variable "worker_instance_memory" {
   description = "Memory size to allocate for worker VMs in MB"
-  default     = 32768
+  default     = 65536
 }
 
 
