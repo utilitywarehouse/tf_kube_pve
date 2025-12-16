@@ -193,6 +193,26 @@ variable "cluster_subnet" {
   description = "Cluster ip subnet"
 }
 
+variable "zone_mapping" {
+  type = map(string)
+  description = "How to map VMs deployed in pve hosts to Kubernetes topology zones"
+
+  default = {
+    "pve-00" = "ld7-a"
+    "pve-01" = "ld7-b"
+    "pve-02" = "ld7-c"
+    "pve-03" = "ld7-a"
+    "pve-04" = "ld7-b"
+    "pve-05" = "ld7-c"
+    "pve-06" = "ld7-a"
+    "pve-07" = "ld7-b"
+    "pve-08" = "ld7-c"
+    "pve-09" = "ld7-a"
+    "pve-10" = "ld7-b"
+    "pve-11" = "ld7-c"
+  }
+}
+
 locals {
   # Mater hostnames are also calculated the same way under our Ansible
   # configuration for DHCP:
