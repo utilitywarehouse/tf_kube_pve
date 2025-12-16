@@ -35,7 +35,7 @@ data "ignition_file" "worker_kubelet_dropin" {
   content {
     content = templatefile("${path.module}/resources/kubelet-dropin.conf",
       {
-        labels = "role=worker,topology.kubernetes.io/zone=${var.worker_instance_list[count.index].pve_host}"
+        labels = "role=worker,topology.kubernetes.io/zone=${var.zone_mapping[var.worker_instance_list[count.index].pve_host]}"
       }
     )
   }
