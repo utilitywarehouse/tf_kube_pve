@@ -35,7 +35,7 @@ data "ignition_file" "master_kubelet_dropin" {
   content {
     content = templatefile("${path.module}/resources/kubelet-dropin.conf",
       {
-        labels = "role=master,topology.kubernetes.io/zone=${var.zone_mapping[var.master_instance_list[count.index].pve_host]}"
+        labels = "role=master,topology.kubernetes.io/zone=${var.zone_mapping[var.master_instance_list[count.index].pve_host]},uw.systems/pve-host=${var.master_instance_list[count.index].pve_host}"
       }
     )
   }
