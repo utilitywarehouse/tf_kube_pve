@@ -103,7 +103,7 @@ resource "proxmox_vm_qemu" "etcd" {
   count       = length(var.etcd_instance_list)
   name        = "etcd-${count.index}"
   target_node = var.etcd_instance_list[count.index].pve_host
-  desc        = "ETCD node"
+  description = "ETCD node"
   pxe         = true
   boot        = "order=net0"
   cpu {

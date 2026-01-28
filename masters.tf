@@ -61,7 +61,7 @@ resource "proxmox_vm_qemu" "master" {
   count       = length(var.master_instance_list)
   name        = local.master_hostname_list[count.index]
   target_node = var.master_instance_list[count.index].pve_host
-  desc        = "Worker node"
+  description = "Master node"
   pxe         = true
   boot        = "order=net0"
   cpu {

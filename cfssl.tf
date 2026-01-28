@@ -99,7 +99,7 @@ resource "proxmox_vm_qemu" "cfssl" {
   count       = var.cfssl_instance == null ? 0 : 1
   name        = "cfssl"
   target_node = var.cfssl_instance.pve_host
-  desc        = "CFSSL node"
+  description = "CFSSL node"
   pxe         = true
   boot        = "order=net0"
   cpu {
