@@ -64,7 +64,7 @@ resource "proxmox_vm_qemu" "worker" {
   count       = length(var.worker_instance_list)
   name        = local.worker_hostname_list[count.index]
   target_node = var.worker_instance_list[count.index].pve_host
-  desc        = "Worker node"
+  description = "Worker node"
   pxe         = true
   boot        = "order=net0"
   cpu {
