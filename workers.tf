@@ -96,4 +96,12 @@ resource "proxmox_vm_qemu" "worker" {
     model   = "virtio"
     mtu     = 9000
   }
+
+  # tags attribute keeps presenting diff between null and empty string values if
+  # not set on terraform plan. Ignore since we are not using atm.
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
