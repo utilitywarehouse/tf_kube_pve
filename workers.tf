@@ -1,6 +1,6 @@
 resource "matchbox_profile" "worker" {
   for_each = local.all_worker_instances
-  name     = each.key
+  name     = each.value.hostname
   kernel   = var.flatcar_kernel_address
   initrd   = var.flatcar_initrd_addresses
   args = [
@@ -15,7 +15,7 @@ resource "matchbox_profile" "worker" {
 
 resource "matchbox_group" "worker" {
   for_each = local.all_worker_instances
-  name     = each.key
+  name     = each.value.hostname
 
   profile = matchbox_profile.worker[each.key].name
 
@@ -56,7 +56,7 @@ data "ignition_config" "worker" {
 
 resource "proxmox_vm_qemu" "worker" {
   for_each    = local.all_worker_instances
-  name        = each.key
+  name        = each.value.hostname
   target_node = each.value.pve_host
   description = each.value.description
   pxe         = true

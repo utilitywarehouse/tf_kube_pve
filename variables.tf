@@ -235,7 +235,8 @@ locals {
     for item in flatten([
       for group_name, group in var.worker_groups : [
         for instance in group.instances : {
-          key                  = "worker-${substr(sha256(instance.mac_address), 0, 6)}"
+          key                  = instance.ip_address
+          hostname             = "worker-${substr(sha256(instance.mac_address), 0, 6)}"
           ip_address           = instance.ip_address
           mac_address          = instance.mac_address
           pve_host             = instance.pve_host

@@ -37,7 +37,7 @@ resource "cloudflare_record" "master" {
 resource "cloudflare_record" "worker" {
   for_each = local.all_worker_instances
   zone_id  = var.dns_zone_id
-  name     = each.key
+  name     = each.value.hostname
   content  = each.value.ip_address
   type     = "A"
   ttl      = 120
