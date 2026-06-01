@@ -146,39 +146,48 @@ variable "master_ignition_directories" {
   description = "The ignition directories to provide to master nodes."
 }
 
-variable "worker_instance_list" {
-  type = list(object({
-    ip_address  = string
-    mac_address = string
-    pve_host    = string
-  }))
-  default = []
-}
-
 variable "worker_instance_core_count" {
-  description = "Number of VM cores to allocate per worker node"
+  description = "Default number of VM cores per worker node, used when a group does not set core_count."
   default     = 8
 }
 
 variable "worker_instance_memory" {
-  description = "Memory size to allocate for worker VMs in MB"
+  description = "Default memory in MB per worker node, used when a group does not set memory."
   default     = 65536
 }
 
+variable "worker_groups" {
+  type = map(object({
+    instances = list(object({
+      ip_address  = string
+      mac_address = string
+      pve_host    = string
+    }))
+
+    core_count           = optional(number)
+    memory               = optional(number)
+    disk_size            = optional(number, 50)
+    ignition_systemd     = optional(list(string))
+    ignition_files       = optional(list(string))
+    ignition_directories = optional(list(string))
+  }))
+  default     = {}
+  description = "Worker node groups keyed by name. Use 'default' for regular workers. All fields except instances fall back to the worker_instance_* and worker_ignition_* defaults when not set. Taints and labels are configured in tf_kube_ignition."
+}
 
 variable "worker_ignition_systemd" {
   type        = list(string)
-  description = "The systemd files to provide to worker nodes."
+  description = "Default systemd units for worker nodes, used when a group does not set ignition_systemd."
 }
 
 variable "worker_ignition_files" {
   type        = list(string)
-  description = "The ignition files to provide to worker nodes."
+  description = "Default ignition files for worker nodes, used when a group does not set ignition_files."
 }
 
 variable "worker_ignition_directories" {
   type        = list(string)
-  description = "The ignition directories to provide to worker nodes."
+  description = "Default ignition directories for worker nodes, used when a group does not set ignition_directories."
 }
 
 variable "ssh_address_range" {
@@ -194,7 +203,7 @@ variable "cluster_subnet" {
 }
 
 variable "zone_mapping" {
-  type = map(string)
+  type        = map(string)
   description = "How to map VMs deployed in pve hosts to Kubernetes topology zones"
 
   default = {
@@ -218,8 +227,27 @@ locals {
   # configuration for DHCP:
   # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
   master_hostname_list = [for master in var.master_instance_list : "master-${substr(sha256(master.mac_address), 0, 6)}"]
-  # Worker hostnames are also calculated the same way under our Ansible
-  # configuration for DHCP:
+
+  # All worker instances across all groups in a single map keyed by hostname.
+  # Hostname formula matches Ansible DHCP config:
   # https://github.com/utilitywarehouse/sys-ansible-k8s-on-prem/blob/master/roles/dhcp/templates/dhcp.conf.tmpl
-  worker_hostname_list = [for worker in var.worker_instance_list : "worker-${substr(sha256(worker.mac_address), 0, 6)}"]
+  all_worker_instances = {
+    for item in flatten([
+      for group_name, group in var.worker_groups : [
+        for instance in group.instances : {
+          key                  = "worker-${substr(sha256(instance.mac_address), 0, 6)}"
+          ip_address           = instance.ip_address
+          mac_address          = instance.mac_address
+          pve_host             = instance.pve_host
+          core_count           = coalesce(group.core_count, var.worker_instance_core_count)
+          memory               = coalesce(group.memory, var.worker_instance_memory)
+          disk_size            = group.disk_size
+          ignition_systemd     = group.ignition_systemd != null ? group.ignition_systemd : var.worker_ignition_systemd
+          ignition_files       = group.ignition_files != null ? group.ignition_files : var.worker_ignition_files
+          ignition_directories = group.ignition_directories != null ? group.ignition_directories : var.worker_ignition_directories
+          description          = group_name == "default" ? "Worker node" : "Worker node (${group_name})"
+        }
+      ]
+    ]) : item.key => item
+  }
 }
