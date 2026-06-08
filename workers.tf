@@ -1,8 +1,8 @@
 resource "matchbox_profile" "worker" {
-  count  = length(var.worker_instance_list)
-  name   = local.worker_hostname_list[count.index]
-  kernel = var.flatcar_kernel_address
-  initrd = var.flatcar_initrd_addresses
+  for_each = local.all_worker_instances
+  name     = each.value.hostname
+  kernel   = var.flatcar_kernel_address
+  initrd   = var.flatcar_initrd_addresses
   args = [
     "initrd=flatcar_production_pxe_image.cpio.gz",
     "ignition.config.url=${var.matchbox_http_endpoint}/ignition?uuid=$${uuid}&mac=$${mac:hexhyp}",
@@ -10,17 +10,17 @@ resource "matchbox_profile" "worker" {
     "root=LABEL=ROOT",
   ]
 
-  raw_ignition = data.ignition_config.worker[count.index].rendered
+  raw_ignition = data.ignition_config.worker[each.key].rendered
 }
 
 resource "matchbox_group" "worker" {
-  count = length(var.worker_instance_list)
-  name  = local.worker_hostname_list[count.index]
+  for_each = local.all_worker_instances
+  name     = each.value.hostname
 
-  profile = matchbox_profile.worker[count.index].name
+  profile = matchbox_profile.worker[each.key].name
 
   selector = {
-    mac = var.worker_instance_list[count.index].mac_address
+    mac = each.value.mac_address
   }
 
   metadata = {
@@ -29,49 +29,43 @@ resource "matchbox_group" "worker" {
 }
 
 data "ignition_file" "worker_kubelet_dropin" {
-  count = length(var.worker_instance_list)
-  path  = "/etc/systemd/system/kubelet.service.d/local.conf"
-  mode  = 420
+  for_each = local.all_worker_instances
+  path     = "/etc/systemd/system/kubelet.service.d/local.conf"
+  mode     = 420
   content {
     content = templatefile("${path.module}/resources/kubelet-dropin.conf",
       {
-        labels = "role=worker,topology.kubernetes.io/zone=${var.zone_mapping[var.worker_instance_list[count.index].pve_host]}"
+        labels = "role=worker,topology.kubernetes.io/zone=${var.zone_mapping[each.value.pve_host]}"
       }
     )
   }
 }
 
 data "ignition_config" "worker" {
-  count = length(var.worker_instance_list)
+  for_each = local.all_worker_instances
 
-  directories = var.worker_ignition_directories
-  disks = [
-    data.ignition_disk.devsda.rendered,
-  ]
-  filesystems = [
-    data.ignition_filesystem.root_scsi0.rendered,
-  ]
+  directories = each.value.ignition_directories
+  disks       = [data.ignition_disk.devsda.rendered]
+  filesystems = [data.ignition_filesystem.root_scsi0.rendered]
   files = concat(
-    [
-      data.ignition_file.worker_kubelet_dropin[count.index].rendered,
-    ],
-    var.worker_ignition_files
+    [data.ignition_file.worker_kubelet_dropin[each.key].rendered],
+    each.value.ignition_files
   )
-  systemd = var.worker_ignition_systemd
+  systemd = each.value.ignition_systemd
 }
 
 resource "proxmox_vm_qemu" "worker" {
-  count       = length(var.worker_instance_list)
-  name        = local.worker_hostname_list[count.index]
-  target_node = var.worker_instance_list[count.index].pve_host
-  description = "Worker node"
+  for_each    = local.all_worker_instances
+  name        = each.value.hostname
+  target_node = each.value.pve_host
+  description = each.value.description
   pxe         = true
   boot        = "order=net0"
   cpu {
-    cores = var.worker_instance_core_count
+    cores = each.value.core_count
   }
   hotplug  = "network,disk,usb"
-  memory   = var.worker_instance_memory
+  memory   = each.value.memory
   vm_state = "running"
   os_type  = "6.x - 2.6 Kernel"
   onboot   = true
@@ -82,7 +76,7 @@ resource "proxmox_vm_qemu" "worker" {
     scsi {
       scsi0 {
         disk {
-          size    = 50
+          size    = each.value.disk_size
           storage = "local-lvm"
         }
       }
@@ -92,7 +86,7 @@ resource "proxmox_vm_qemu" "worker" {
   network {
     id      = 0
     bridge  = "vmbr0"
-    macaddr = var.worker_instance_list[count.index].mac_address
+    macaddr = each.value.mac_address
     model   = "virtio"
     mtu     = 9000
   }
