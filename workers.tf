@@ -73,7 +73,7 @@ resource "proxmox_vm_qemu" "worker" {
   qemu_os  = "other"
 
   # set emtpy tag to allow updates
-  tags = ""
+  tags = "worker"
 
   disks {
     scsi {
