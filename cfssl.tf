@@ -112,6 +112,7 @@ resource "proxmox_vm_qemu" "cfssl" {
   onboot   = true
   scsihw   = "virtio-scsi-pci"
   qemu_os  = "other"
+  tags     = "cfssl"
 
   disks {
     scsi {
@@ -132,11 +133,4 @@ resource "proxmox_vm_qemu" "cfssl" {
     mtu     = 9000
   }
 
-  # tags attribute keeps presenting diff between null and empty string values if
-  # not set on terraform plan. Ignore since we are not using atm.
-  lifecycle {
-    ignore_changes = [
-      tags
-    ]
-  }
 }

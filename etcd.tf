@@ -116,6 +116,7 @@ resource "proxmox_vm_qemu" "etcd" {
   onboot   = true
   scsihw   = "virtio-scsi-pci"
   qemu_os  = "other"
+  tags     = "etcd"
 
   disks {
     scsi {
@@ -140,13 +141,5 @@ resource "proxmox_vm_qemu" "etcd" {
     macaddr = var.etcd_instance_list[count.index].mac_address
     model   = "virtio"
     mtu     = 9000
-  }
-
-  # tags attribute keeps presenting diff between null and empty string values if
-  # not set on terraform plan. Ignore since we are not using atm.
-  lifecycle {
-    ignore_changes = [
-      tags
-    ]
   }
 }

@@ -71,9 +71,7 @@ resource "proxmox_vm_qemu" "worker" {
   onboot   = true
   scsihw   = "virtio-scsi-pci"
   qemu_os  = "other"
-
-  # set emtpy tag to allow updates
-  tags = "worker"
+  tags     = "worker"
 
   disks {
     scsi {
