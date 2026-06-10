@@ -236,7 +236,7 @@ locals {
       for group_name, group in var.worker_groups : [
         for instance in group.instances : {
           key                  = instance.ip_address
-          hostname             = "${group_name}-${substr(sha256(instance.mac_address), 0, 6)}"
+          hostname             = "${lower(group_name)}-${substr(sha256(instance.mac_address), 0, 6)}"
           ip_address           = instance.ip_address
           mac_address          = instance.mac_address
           pve_host             = instance.pve_host
