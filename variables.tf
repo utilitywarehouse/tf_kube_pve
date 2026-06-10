@@ -236,7 +236,7 @@ locals {
       for group_name, group in var.worker_groups : [
         for instance in group.instances : {
           key                  = instance.ip_address
-          hostname             = "worker-${substr(sha256(instance.mac_address), 0, 6)}"
+          hostname             = "${lower(group_name)}-${substr(sha256(instance.mac_address), 0, 6)}"
           ip_address           = instance.ip_address
           mac_address          = instance.mac_address
           pve_host             = instance.pve_host
@@ -246,7 +246,7 @@ locals {
           ignition_systemd     = group.ignition_systemd != null ? group.ignition_systemd : var.worker_ignition_systemd
           ignition_files       = group.ignition_files != null ? group.ignition_files : var.worker_ignition_files
           ignition_directories = group.ignition_directories != null ? group.ignition_directories : var.worker_ignition_directories
-          description          = group_name == "default" ? "Worker node" : "Worker node (${group_name})"
+          description          = "${group_name} node"
         }
       ]
     ]) : item.key => item
