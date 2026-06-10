@@ -246,7 +246,7 @@ locals {
           ignition_systemd     = group.ignition_systemd != null ? group.ignition_systemd : var.worker_ignition_systemd
           ignition_files       = group.ignition_files != null ? group.ignition_files : var.worker_ignition_files
           ignition_directories = group.ignition_directories != null ? group.ignition_directories : var.worker_ignition_directories
-          description          = group_name == "default" ? "Worker node" : "Worker node (${group_name})"
+          description          = "${group_name} node"
         }
       ]
     ]) : item.key => item
