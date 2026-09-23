@@ -57,41 +57,53 @@ data "ignition_config" "master" {
   systemd = var.master_ignition_systemd
 }
 
-resource "proxmox_vm_qemu" "master" {
-  count       = length(var.master_instance_list)
-  name        = local.master_hostname_list[count.index]
-  target_node = var.master_instance_list[count.index].pve_host
-  description = "Master node"
-  pxe         = true
-  boot        = "order=net0"
+resource "proxmox_virtual_environment_vm" "master" {
+  count         = length(var.master_instance_list)
+  name          = local.master_hostname_list[count.index]
+  node_name     = var.master_instance_list[count.index].pve_host
+  description   = "Master node"
+  tags          = ["master"]
+  boot_order    = ["net0"]
+  hotplug       = "network,disk,usb"
+  on_boot       = true
+  started       = true
+  scsi_hardware = "virtio-scsi-pci"
+
+  operating_system {
+    type = "other"
+  }
+
   cpu {
-    cores = var.master_instance_core_count
-  }
-  hotplug  = "network,disk,usb"
-  memory   = var.master_instance_memory
-  vm_state = "running"
-  os_type  = "6.x - 2.6 Kernel"
-  onboot   = true
-  scsihw   = "virtio-scsi-pci"
-  qemu_os  = "other"
-  tags     = "master"
-
-  disks {
-    scsi {
-      scsi0 {
-        disk {
-          size    = 50
-          storage = "local-lvm"
-        }
-      }
-    }
+    cores   = var.master_instance_core_count
+    sockets = 1
+    type    = "host" # inherited from telmate provider default value
   }
 
-  network {
-    id      = 0
-    bridge  = "vmbr0"
-    macaddr = var.master_instance_list[count.index].mac_address
-    model   = "virtio"
-    mtu     = 9000
+  memory {
+    dedicated = var.master_instance_memory
+  }
+
+  agent {
+    enabled = false
+  }
+
+  disk {
+    interface    = "scsi0"
+    datastore_id = "local-lvm"
+    size         = 50
+    file_format  = "raw"
+    cache        = "none"
+    discard      = "ignore"
+    iothread     = false
+    replicate    = false
+    backup       = true
+  }
+
+  network_device {
+    bridge      = "vmbr0"
+    mac_address = var.master_instance_list[count.index].mac_address
+    model       = "virtio"
+    mtu         = 9000
+    firewall    = false
   }
 }

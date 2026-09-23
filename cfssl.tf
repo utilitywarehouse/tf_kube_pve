@@ -95,42 +95,53 @@ data "ignition_config" "cfssl" {
   directories = var.cfssl_ignition_directories
 }
 
-resource "proxmox_vm_qemu" "cfssl" {
-  count       = var.cfssl_instance == null ? 0 : 1
-  name        = "cfssl"
-  target_node = var.cfssl_instance.pve_host
-  description = "CFSSL node"
-  pxe         = true
-  boot        = "order=net0"
+resource "proxmox_virtual_environment_vm" "cfssl" {
+  count         = var.cfssl_instance == null ? 0 : 1
+  name          = "cfssl"
+  node_name     = var.cfssl_instance.pve_host
+  description   = "CFSSL node"
+  tags          = ["cfssl"]
+  boot_order    = ["net0"]
+  hotplug       = "network,disk,usb"
+  on_boot       = true
+  started       = true
+  scsi_hardware = "virtio-scsi-pci"
+
+  operating_system {
+    type = "other"
+  }
+
   cpu {
-    cores = var.cfssl_instance_core_count
-  }
-  hotplug  = "network,disk,usb"
-  memory   = var.cfssl_instance_memory
-  vm_state = "running"
-  os_type  = "6.x - 2.6 Kernel"
-  onboot   = true
-  scsihw   = "virtio-scsi-pci"
-  qemu_os  = "other"
-  tags     = "cfssl"
-
-  disks {
-    scsi {
-      scsi0 {
-        disk {
-          size    = 50
-          storage = "local-lvm"
-        }
-      }
-    }
+    cores   = var.cfssl_instance_core_count
+    sockets = 1
+    type    = "host" # inherited from telmate provider default value
   }
 
-  network {
-    id      = 0
-    bridge  = "vmbr0"
-    macaddr = var.cfssl_instance.mac_address
-    model   = "virtio"
-    mtu     = 9000
+  memory {
+    dedicated = var.cfssl_instance_memory
   }
 
+  agent {
+    enabled = false
+  }
+
+  disk {
+    interface    = "scsi0"
+    datastore_id = "local-lvm"
+    size         = 50
+    file_format  = "raw"
+    cache        = "none"
+    discard      = "ignore"
+    iothread     = false
+    replicate    = false
+    backup       = true
+  }
+
+  network_device {
+    bridge      = "vmbr0"
+    mac_address = var.cfssl_instance.mac_address
+    model       = "virtio"
+    mtu         = 9000
+    firewall    = false
+  }
 }
