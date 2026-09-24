@@ -54,41 +54,45 @@ data "ignition_config" "worker" {
   systemd = each.value.ignition_systemd
 }
 
-resource "proxmox_vm_qemu" "worker" {
-  for_each    = local.all_worker_instances
-  name        = each.value.hostname
-  target_node = each.value.pve_host
-  description = each.value.description
-  pxe         = true
-  boot        = "order=net0"
+resource "proxmox_virtual_environment_vm" "worker" {
+  for_each      = local.all_worker_instances
+  name          = each.value.hostname
+  node_name     = each.value.pve_host
+  description   = each.value.description
+  tags          = ["worker"]
+  boot_order    = ["net0"]
+  hotplug       = "network,disk,usb"
+  on_boot       = true
+  started       = true
+  scsi_hardware = "virtio-scsi-pci"
+
   cpu {
-    cores = each.value.core_count
-  }
-  hotplug  = "network,disk,usb"
-  memory   = each.value.memory
-  vm_state = "running"
-  os_type  = "6.x - 2.6 Kernel"
-  onboot   = true
-  scsihw   = "virtio-scsi-pci"
-  qemu_os  = "other"
-  tags     = "worker"
-
-  disks {
-    scsi {
-      scsi0 {
-        disk {
-          size    = each.value.disk_size
-          storage = "local-lvm"
-        }
-      }
-    }
+    cores   = each.value.core_count
+    sockets = 1
+    type    = "host" # inherited from telmate provider default value
   }
 
-  network {
-    id      = 0
-    bridge  = "vmbr0"
-    macaddr = each.value.mac_address
-    model   = "virtio"
-    mtu     = 9000
+  memory {
+    dedicated = each.value.memory
+  }
+
+  disk {
+    interface    = "scsi0"
+    datastore_id = "local-lvm"
+    size         = each.value.disk_size
+    file_format  = "raw"
+    cache        = "none"
+    discard      = "ignore"
+    iothread     = false
+    replicate    = false
+    backup       = true
+  }
+
+  network_device {
+    bridge      = "vmbr0"
+    mac_address = upper(each.value.mac_address)
+    model       = "virtio"
+    mtu         = 9000
+    firewall    = false
   }
 }
