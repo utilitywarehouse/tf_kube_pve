@@ -69,10 +69,6 @@ resource "proxmox_virtual_environment_vm" "master" {
   started       = true
   scsi_hardware = "virtio-scsi-pci"
 
-  operating_system {
-    type = "other"
-  }
-
   cpu {
     cores   = var.master_instance_core_count
     sockets = 1
@@ -81,10 +77,6 @@ resource "proxmox_virtual_environment_vm" "master" {
 
   memory {
     dedicated = var.master_instance_memory
-  }
-
-  agent {
-    enabled = false
   }
 
   disk {
@@ -101,7 +93,7 @@ resource "proxmox_virtual_environment_vm" "master" {
 
   network_device {
     bridge      = "vmbr0"
-    mac_address = var.master_instance_list[count.index].mac_address
+    mac_address = upper(var.master_instance_list[count.index].mac_address)
     model       = "virtio"
     mtu         = 9000
     firewall    = false

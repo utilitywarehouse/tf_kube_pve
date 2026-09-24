@@ -66,10 +66,6 @@ resource "proxmox_virtual_environment_vm" "worker" {
   started       = true
   scsi_hardware = "virtio-scsi-pci"
 
-  operating_system {
-    type = "other"
-  }
-
   cpu {
     cores   = each.value.core_count
     sockets = 1
@@ -78,10 +74,6 @@ resource "proxmox_virtual_environment_vm" "worker" {
 
   memory {
     dedicated = each.value.memory
-  }
-
-  agent {
-    enabled = false
   }
 
   disk {
@@ -98,7 +90,7 @@ resource "proxmox_virtual_environment_vm" "worker" {
 
   network_device {
     bridge      = "vmbr0"
-    mac_address = each.value.mac_address
+    mac_address = upper(each.value.mac_address)
     model       = "virtio"
     mtu         = 9000
     firewall    = false

@@ -111,10 +111,6 @@ resource "proxmox_virtual_environment_vm" "etcd" {
   started       = true
   scsi_hardware = "virtio-scsi-pci"
 
-  operating_system {
-    type = "other"
-  }
-
   cpu {
     cores   = var.etcd_instance_core_count
     sockets = 1
@@ -123,10 +119,6 @@ resource "proxmox_virtual_environment_vm" "etcd" {
 
   memory {
     dedicated = var.etcd_instance_memory
-  }
-
-  agent {
-    enabled = false
   }
 
   disk {
@@ -155,7 +147,7 @@ resource "proxmox_virtual_environment_vm" "etcd" {
 
   network_device {
     bridge      = "vmbr0"
-    mac_address = var.etcd_instance_list[count.index].mac_address
+    mac_address = upper(var.etcd_instance_list[count.index].mac_address)
     model       = "virtio"
     mtu         = 9000
     firewall    = false

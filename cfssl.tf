@@ -107,10 +107,6 @@ resource "proxmox_virtual_environment_vm" "cfssl" {
   started       = true
   scsi_hardware = "virtio-scsi-pci"
 
-  operating_system {
-    type = "other"
-  }
-
   cpu {
     cores   = var.cfssl_instance_core_count
     sockets = 1
@@ -119,10 +115,6 @@ resource "proxmox_virtual_environment_vm" "cfssl" {
 
   memory {
     dedicated = var.cfssl_instance_memory
-  }
-
-  agent {
-    enabled = false
   }
 
   disk {
@@ -139,7 +131,7 @@ resource "proxmox_virtual_environment_vm" "cfssl" {
 
   network_device {
     bridge      = "vmbr0"
-    mac_address = var.cfssl_instance.mac_address
+    mac_address = upper(var.cfssl_instance.mac_address)
     model       = "virtio"
     mtu         = 9000
     firewall    = false
