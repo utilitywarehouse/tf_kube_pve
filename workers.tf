@@ -107,6 +107,9 @@ resource "proxmox_virtual_environment_firewall_options" "worker" {
   output_policy = "ACCEPT"
   # VMs PXE boot and get their address via DHCP
   dhcp = true
+
+  # Attach the rules before enabling the firewall, so a failure leaves the VM open
+  depends_on = [proxmox_virtual_environment_firewall_rules.worker]
 }
 
 resource "proxmox_virtual_environment_firewall_rules" "worker" {
@@ -124,6 +127,4 @@ resource "proxmox_virtual_environment_firewall_rules" "worker" {
       security_group = rule.value
     }
   }
-
-  depends_on = [proxmox_virtual_environment_firewall_options.worker]
 }
