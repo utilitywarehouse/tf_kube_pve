@@ -146,6 +146,18 @@ variable "master_ignition_directories" {
   description = "The ignition directories to provide to master nodes."
 }
 
+variable "master_api_source_cidrs" {
+  type        = list(string)
+  default     = []
+  description = "Source CIDRs allowed to reach the apiserver (tcp/443) on master VMs. No rule is created when empty."
+}
+
+variable "master_extra_security_groups" {
+  type        = list(string)
+  default     = []
+  description = "Names of additional Proxmox firewall security groups to attach to master VMs, for env specific rules."
+}
+
 variable "worker_instance_core_count" {
   description = "Default number of VM cores per worker node, used when a group does not set core_count."
   default     = 8
@@ -190,6 +202,12 @@ variable "worker_ignition_directories" {
   description = "Default ignition directories for worker nodes, used when a group does not set ignition_directories."
 }
 
+variable "worker_extra_security_groups" {
+  type        = list(string)
+  default     = []
+  description = "Names of additional Proxmox firewall security groups to attach to worker VMs, for env specific rules."
+}
+
 variable "ssh_address_range" {
   description = "Address range from which to allow ssh"
 }
@@ -200,6 +218,24 @@ variable "nodes_subnet_cidr" {
 
 variable "cluster_subnet" {
   description = "Cluster ip subnet"
+}
+
+variable "firewall_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable the Proxmox firewall on master and worker VMs. Replaces the Calico host endpoint policies."
+}
+
+variable "firewall_trusted_cidrs" {
+  type        = list(string)
+  default     = []
+  description = "Extra CIDRs (e.g. the pod subnet) allowed to reach masters and workers on any port, on top of the etcd, masters and nodes subnets."
+}
+
+variable "firewall_bgp_source_cidrs" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "Source CIDRs allowed to reach tcp/179 on masters and workers. Defaults to any, matching the Calico failsafe ports."
 }
 
 variable "zone_mapping" {
@@ -251,40 +287,4 @@ locals {
       ]
     ]) : item.key => item
   }
-}
-
-variable "firewall_enabled" {
-  type        = bool
-  default     = false
-  description = "Enable the Proxmox firewall on master and worker VMs. Replaces the Calico host endpoint policies."
-}
-
-variable "firewall_trusted_cidrs" {
-  type        = list(string)
-  default     = []
-  description = "Extra CIDRs (e.g. the pod subnet) allowed to reach masters and workers on any port, on top of the etcd, masters and nodes subnets."
-}
-
-variable "firewall_bgp_source_cidrs" {
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-  description = "Source CIDRs allowed to reach tcp/179 on masters and workers. Defaults to any, matching the Calico failsafe ports."
-}
-
-variable "master_extra_security_groups" {
-  type        = list(string)
-  default     = []
-  description = "Names of additional Proxmox firewall security groups to attach to master VMs, for env specific rules."
-}
-
-variable "worker_extra_security_groups" {
-  type        = list(string)
-  default     = []
-  description = "Names of additional Proxmox firewall security groups to attach to worker VMs, for env specific rules."
-}
-
-variable "master_api_source_cidrs" {
-  type        = list(string)
-  default     = []
-  description = "Source CIDRs allowed to reach the apiserver (tcp/443) on master VMs. No rule is created when empty."
 }
