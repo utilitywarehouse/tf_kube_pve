@@ -96,6 +96,54 @@ resource "proxmox_virtual_environment_vm" "master" {
     mac_address = upper(var.master_instance_list[count.index].mac_address)
     model       = "virtio"
     mtu         = 9000
-    firewall    = false
+    firewall    = var.firewall_enabled
   }
+}
+
+resource "proxmox_virtual_environment_cluster_firewall_security_group" "master_api" {
+  count = var.firewall_enabled && length(var.master_api_source_cidrs) > 0 ? 1 : 0
+
+  name    = "master-api"
+  comment = "Kube apiserver access"
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "443"
+    source  = join(",", var.master_api_source_cidrs)
+    comment = "allow-to-master-port-443"
+  }
+}
+
+resource "proxmox_virtual_environment_firewall_options" "master" {
+  count = var.firewall_enabled ? length(var.master_instance_list) : 0
+
+  node_name     = proxmox_virtual_environment_vm.master[count.index].node_name
+  vm_id         = proxmox_virtual_environment_vm.master[count.index].vm_id
+  enabled       = true
+  input_policy  = "DROP"
+  output_policy = "ACCEPT"
+  # VMs PXE boot and get their address via DHCP
+  dhcp = true
+}
+
+resource "proxmox_virtual_environment_firewall_rules" "master" {
+  count = var.firewall_enabled ? length(var.master_instance_list) : 0
+
+  node_name = proxmox_virtual_environment_vm.master[count.index].node_name
+  vm_id     = proxmox_virtual_environment_vm.master[count.index].vm_id
+
+  dynamic "rule" {
+    for_each = concat(
+      [proxmox_virtual_environment_cluster_firewall_security_group.node_base[0].name],
+      proxmox_virtual_environment_cluster_firewall_security_group.master_api[*].name,
+      var.master_extra_security_groups,
+    )
+    content {
+      security_group = rule.value
+    }
+  }
+
+  depends_on = [proxmox_virtual_environment_firewall_options.master]
 }

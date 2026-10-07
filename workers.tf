@@ -93,6 +93,37 @@ resource "proxmox_virtual_environment_vm" "worker" {
     mac_address = upper(each.value.mac_address)
     model       = "virtio"
     mtu         = 9000
-    firewall    = false
+    firewall    = var.firewall_enabled
   }
+}
+
+resource "proxmox_virtual_environment_firewall_options" "worker" {
+  for_each = var.firewall_enabled ? local.all_worker_instances : {}
+
+  node_name     = proxmox_virtual_environment_vm.worker[each.key].node_name
+  vm_id         = proxmox_virtual_environment_vm.worker[each.key].vm_id
+  enabled       = true
+  input_policy  = "DROP"
+  output_policy = "ACCEPT"
+  # VMs PXE boot and get their address via DHCP
+  dhcp = true
+}
+
+resource "proxmox_virtual_environment_firewall_rules" "worker" {
+  for_each = var.firewall_enabled ? local.all_worker_instances : {}
+
+  node_name = proxmox_virtual_environment_vm.worker[each.key].node_name
+  vm_id     = proxmox_virtual_environment_vm.worker[each.key].vm_id
+
+  dynamic "rule" {
+    for_each = concat(
+      [proxmox_virtual_environment_cluster_firewall_security_group.node_base[0].name],
+      var.worker_extra_security_groups,
+    )
+    content {
+      security_group = rule.value
+    }
+  }
+
+  depends_on = [proxmox_virtual_environment_firewall_options.worker]
 }
